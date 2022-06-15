@@ -116,7 +116,7 @@ function drawHands() {
   g.drawString(weekDay[0].toUpperCase(), 137, 90);
 
   //draw seconds hand only if screen !locked
-  if (Bangle.isLocked) {
+  if (Bangle.isLocked(1)) {
       handLayers = [
       {x:cx,
        y:cy,
