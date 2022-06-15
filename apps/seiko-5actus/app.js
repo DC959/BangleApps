@@ -50,9 +50,6 @@ let W = g.getWidth();
 let H = g.getHeight();
 let cx = W/2;
 let cy = H/2;
-let Timeout;
-
-Bangle.loadWidgets();
 
 /* Custom version of Bangle.drawWidgets (does not clear the widget areas) Thanks to rozek */
 
@@ -118,32 +115,48 @@ function drawHands() {
   else {g.setColor(g.theme.bg);}
   g.drawString(weekDay[0].toUpperCase(), 137, 90);
 
-  handLayers = [
-    {x:cx,
-     y:cy,
-     image:imgHour,
-     rotate:hourAngle,
-     center:true
-    },
-    {x:cx,
-     y:cy,
-     image:imgMin,
-     rotate:minAngle,
-     center:true
-    },
-    {x:cx,
-     y:cy,
-     image:imgSec,
-     rotate:secAngle,
-     center:true
-    }];
+  //draw seconds hand only if screen !locked
+  if (Bangle.isLocked) {
+      handLayers = [
+      {x:cx,
+       y:cy,
+       image:imgHour,
+       rotate:hourAngle,
+       center:true
+      },
+      {x:cx,
+       y:cy,
+       image:imgMin,
+       rotate:minAngle,
+       center:true
+      }];
+  }else{
+      handLayers = [
+      {x:cx,
+       y:cy,
+       image:imgHour,
+       rotate:hourAngle,
+       center:true
+      },
+      {x:cx,
+       y:cy,
+       image:imgMin,
+       rotate:minAngle,
+       center:true
+      },
+      {x:cx,
+       y:cy,
+       image:imgSec,
+       rotate:secAngle,
+       center:true
+      }];
+  }
 
   g.setColor(g.theme.fg);
   g.drawImages(handLayers);
 }
 
 function drawBackground() {
-  g.clear(1);
   g.setBgColor(g.theme.bg);
   g.setColor(g.theme.fg);
   bgLayer = [
@@ -153,29 +166,33 @@ function drawBackground() {
      center:true
     }];
   g.drawImages(bgLayer);
-  g.reset();
 }
 
-/* Refresh the display every second */
+/* Refresh the display when called */
 
 function displayRefresh() {
   g.clear(true);
   drawBackground();
   drawHands();
   Bangle.drawWidgets();
-
-  let Pause = 1000 - (Date.now() % 1000);
-  Timeout = setTimeout(displayRefresh,Pause);
 }
 
-Bangle.on('lcdPower', (on) => {
-  if (on) {
-    if (Timeout != null) { clearTimeout(Timeout); Timeout = undefined;}
+Bangle.on('lock', (lock) => {
+  if (pauseInterval) {
+    clearInterval(pauseInterval);
+    pauseInterval = undefined;
+  }
+  if (lock) {
     displayRefresh();
+    pauseInterval = setInterval(displayRefresh, 60000);
+  }else{
+    displayRefresh();
+    pauseInterval = setInterval(displayRefresh, 1000);
   }
 });
 
 Bangle.setUI("clock");
 // load widgets after 'setUI' so they're aware there is a clock active
-Bangle.loadWidgets(); 
+Bangle.loadWidgets();
+pauseInterval = setInterval(displayRefresh, 1000);
 displayRefresh();
